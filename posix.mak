@@ -91,7 +91,8 @@ $(ROOT)/tests_extractor: tests_extractor.d
 	$(DUB) build \
 		   --single $< --force --compiler=$(abspath $(DMD)) && mv ./tests_extractor $@
 
-test: $(ROOT)/tests_extractor
+test: $(ROOT)/tests_extractor $(ROOT)/rdmd $(ROOT)/rdmd_test
+	$(ROOT)/rdmd_test
 	$< -i ./test/tests_extractor/ascii.d | diff - ./test/tests_extractor/ascii.d.ext
 	$< -i ./test/tests_extractor/iteration.d | diff - ./test/tests_extractor/iteration.d.ext
 
