@@ -351,6 +351,7 @@ int main(string[] args)
     string previousVersion = "Previous version";
     bool hideTextChanges = false;
     string revRange;
+    bool incremental;
 
     auto helpInformation = getopt(
         args,
@@ -359,6 +360,7 @@ int main(string[] args)
         "date", &nextVersionDate,
         "version", &nextVersionString,
         "prev-version", &previousVersion, // this can automatically be detected
+        "incremental", &incremental,
         "no-text", &hideTextChanges);
 
     if (helpInformation.helpWanted)
@@ -380,6 +382,53 @@ Please supply a bugzilla version
     else
     {
         writeln("Skipped querying Bugzilla for changes. Please define a revision range e.g ./changed v2.072.2..upstream/stable");
+    }
+
+    ChangelogEntry[] entries;
+    if (incremental && outputFile.exists)
+    {
+        auto text = outputFile.readText;
+        do
+        {
+            text = text.find("$(BUGSTITLE_TEXT_BODY");
+            text.skipOver("$(BUGSTITLE_TEXT_BODY ");
+
+            if (text.empty)
+                break;
+
+            int parentCounter;
+            auto ps = text.until!((c){
+                switch (c)
+                {
+                    case '(':
+                        parentCounter++;
+                        break;
+                    case ')':
+                        parentCounter--;
+                        break;
+                    default:
+                }
+                return parentCounter < 0;
+            }).array.splitter(",");
+            import std.range : dropBack, dropOne;
+            ChangelogEntry entry;
+            entry.title = ps.front.to!string.strip;
+            auto remainingParagraph = ps.dropOne.joiner(",").to!string.strip;
+            remainingParagraph.skipOver("$(LI $(LNAME2 ");
+
+            auto rs = remainingParagraph.splitter(",");
+            entry.basename = rs.front;
+            entry.description = rs
+                .joiner(",")
+                .to!string
+                .dropBack(2);
+                //basename: "foo",
+            //};
+
+            entry.writeln;
+        }
+        while (!text.empty);
+        //ps.writeln;
     }
 
     auto f = File(outputFile, "w");
