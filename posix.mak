@@ -10,9 +10,7 @@ DUB=dub
 WITH_DOC = no
 DOC = ../dlang.org
 
-# Load operating system $(OS) (e.g. linux, osx, ...) and $(MODEL) (e.g. 32, 64) detection Makefile from dmd
-$(shell [ ! -d $(DMD_DIR) ] && git clone --depth=1 https://github.com/dlang/dmd $(DMD_DIR))
-include $(DMD_DIR)/src/osmodel.mak
+include osmodel.mak
 
 # Build folder for all binaries
 GENERATED = generated
